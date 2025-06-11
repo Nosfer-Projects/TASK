@@ -26,7 +26,6 @@ jobs:
           libgtk-3-0 \
           libgtk-4-1 \
           libxss1 \
-          libasound2 \
           libnss3 \
           libx11-xcb1 \
           libxcomposite1 \
@@ -38,7 +37,6 @@ jobs:
           libatspi2.0-0 \
           libdrm2 \
           libwoff1 \
-          libwoff2-1 \
           libvpx9 \
           libevent-2.1-7 \
           libopus0 \
@@ -53,7 +51,10 @@ jobs:
           gstreamer1.0-plugins-bad \
           gstreamer1.0-libav \
           flite \
-          libgles2
+          libgles2 \
+          libasound2t64 \
+          libwoff2dec0
+
 
     - name: Set up Python & install Python dependencies
       run: |
