@@ -95,11 +95,5 @@ allure serve allure_results/
 - The test uses **Playwright’s synchronous API** for full compatibility with Behave.
 - By default, it runs on **Chromium**, but you can easily add support for **Firefox** and **WebKit**.
 - The project is structured using the **Page Object Model**, making it scalable and maintainable.
-- Designed with extensibility in mind – ideal for future integration with **API tests**, **performance testing**, and **CI/CD pipelines**.
 
 ---
-
-## 🏆 Bonus (optional)
-
-See the `bonus_async/` directory for a demonstration of **parallel browser execution** using **async Playwright + pytest**, showcasing **cross-browser automation** with a **CI-ready** implementation.
-
