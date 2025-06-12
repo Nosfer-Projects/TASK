@@ -17,6 +17,9 @@ def before_feature(context : CustomContext, feature):
     context.cookie_manager = CookieManager(context.page)
     feature.name += f" [{os.getenv('BROWSER', 'unknown')}]"
 
+def before_scenario(context, scenario):
+    scenario.name += f" [{os.getenv('BROWSER', 'unknown')}]"
+
 def after_feature(context: CustomContext, feature):
     context.page.close()
     context.browser.close()
