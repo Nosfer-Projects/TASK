@@ -33,7 +33,7 @@ jobs:
       run: |
         source venv/bin/activate
         mkdir -p allure_results_${{ matrix.browser }}
-        BROWSER=${{ matrix.browser }} behave -f allure_behave.formatter:AllureFormatter -o allure_results_${{ matrix.browser }} || true
+        BROWSER=${{ matrix.browser }} behave -f allure_behave.formatter:AllureFormatter -o allure_results_${{ matrix.browser }}
 
     - name: Upload Allure Results
       uses: actions/upload-artifact@v4
@@ -58,12 +58,12 @@ jobs:
     - name: Merge Allure Results
       run: |
         mkdir -p merged_results
-        for dir in artifacts/allure_results_*; do
-          cp -r "$dir"/* merged_results/
-        done
+        find artifacts/allure_results_* -type f -name "*.json" -exec cp {} merged_results/ \;
 
     - name: Debug merged results
-      run: ls -l merged_results
+      run: |
+        echo "Files in merged_results:"
+        ls -l merged_results
 
     - name: Generate Allure Report
       run: |
@@ -71,7 +71,9 @@ jobs:
         allure generate merged_results -o allure-report --clean
 
     - name: Debug Allure Report files
-      run: ls -lR allure-report
+      run: |
+        echo "Allure report folder content:"
+        ls -lR allure-report
 
     - name: Upload Allure Report
       uses: actions/upload-artifact@v4
