@@ -8,9 +8,9 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
-      fail-fast: false
       matrix:
         browser: [chromium, firefox, webkit]
+      fail-fast: false
 
     steps:
     - uses: actions/checkout@v3
@@ -20,51 +20,31 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: Install system dependencies for Playwright
+    - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y \
-          libgtk-3-0 libx11-xcb1 libxcomposite1 libxdamage1 libxrandr2 \
-          libgbm1 libnss3 libatk1.0-0 libpangocairo-1.0-0 \
-          libcups2 libxss1 libxtst6 fonts-liberation
-
-    - name: Install Python dependencies
-      run: |
+        sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxrandr2 libxdamage1 libxkbcommon0 libgtk-3-0 libasound2
         python -m venv venv
         source venv/bin/activate
         pip install -r requirements.txt
         python -m playwright install --with-deps
 
-    - name: Show browser variable
-      run: echo "Running tests on browser: ${{ matrix.browser }}"
-
-    - name: List features directory
-      run: ls -lR features/
-
     - name: Run tests on ${{ matrix.browser }}
-      continue-on-error: true
       run: |
         source venv/bin/activate
-        mkdir -p screenshots
-        BROWSER=${{ matrix.browser }} behave -v -f allure_behave.formatter:AllureFormatter -o allure_results_${{ matrix.browser }}
+        mkdir -p allure_results_${{ matrix.browser }}
+        BROWSER=${{ matrix.browser }} behave -f allure_behave.formatter:AllureFormatter -o allure_results_${{ matrix.browser }} || true
 
     - name: Upload Allure Results
-      if: always()
       uses: actions/upload-artifact@v4
       with:
         name: allure_results_${{ matrix.browser }}
         path: allure_results_${{ matrix.browser }}
 
-    - name: Upload Screenshots (if any)
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: screenshots_${{ matrix.browser }}
-        path: screenshots
-
   merge-reports:
     needs: run-tests
     runs-on: ubuntu-latest
+
     steps:
     - uses: actions/setup-java@v3
       with:
