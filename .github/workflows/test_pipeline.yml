@@ -93,7 +93,7 @@ jobs:
     needs: merge-and-generate-report
     runs-on: ubuntu-latest
 
-    if: github.ref == 'refs/heads/main'  # tylko main może publikować do Pages
+    if: github.ref == 'refs/heads/master'
 
     permissions:
       pages: write
