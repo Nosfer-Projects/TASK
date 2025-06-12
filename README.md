@@ -124,7 +124,8 @@ The pipeline is located at `.github/workflows/test_pipeline.yml`. It runs tests 
 
 During pipeline runs on GitHub Actions, all tests failed due to the bank’s security systems triggering CAPTCHA challenges. This happened because the website detected access from a foreign IP/location and blocked automated access.
 
-![VIDEO](https://github.com/user-attachments/assets/d3744d80-0bef-42b4-aed9-70c8c198774e)
+![VIDEO](https://github.com/user-attachments/assets/14838d86-23d5-42ba-ab70-8ab689d36ba8)
+
 
 
 ---
