@@ -1,8 +1,10 @@
 name: Run Playwright Tests and Publish Allure Report
 
+# Workflow triggered manually via GitHub UI
 on:
   workflow_dispatch:
 
+# Permissions required for writing repository contents, GitHub Pages, and obtaining ID token
 permissions:
   contents: write
   pages: write
@@ -10,55 +12,66 @@ permissions:
 
 jobs:
   run-tests:
+    # Run job on the latest Ubuntu environment
     runs-on: ubuntu-latest
+    
+    # Define a matrix to run tests across multiple browsers: Chromium, Firefox, and WebKit
     strategy:
       matrix:
         browser: [chromium, firefox, webkit]
-      fail-fast: false
+      fail-fast: false  # Continue running all matrix jobs even if one fails
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4  # Clone the repository code to the runner
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10'
+        python-version: '3.10'  # Set up Python 3.10 environment
 
     - name: Install dependencies
       run: |
+        # Update system packages and install dependencies required for Playwright browsers
         sudo apt-get update
         sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxrandr2 libxdamage1 libxkbcommon0 libgtk-3-0 libasound2t64
+        # Create and activate a Python virtual environment
         python -m venv venv
         source venv/bin/activate
+        # Install Python dependencies from requirements.txt
         pip install -r requirements.txt
+        # Install Playwright browsers along with their dependencies
         python -m playwright install --with-deps
 
     - name: Run tests on ${{ matrix.browser }}
       run: |
         source venv/bin/activate
+        # Create directory to store Allure results
         mkdir -p allure-results
+        # Run tests with Behave, specifying the browser from the matrix and outputting results in Allure format
         BROWSER=${{ matrix.browser }} behave -f allure_behave.formatter:AllureFormatter -o allure-results
 
     - name: Upload Allure Results for ${{ matrix.browser }}
-      if: always()
+      if: always()  # Upload results even if the tests fail
       uses: actions/upload-artifact@v4
       with:
+        # Save test results as an artifact per browser
         name: allure-results-${{ matrix.browser }}
         path: allure-results
 
   merge-and-generate-report:
-    needs: run-tests
-    if: always()
+    needs: run-tests  # Run after all test jobs complete
+    if: always()     # Run regardless of test success or failure
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4  # Checkout repository again to have access to any files if needed
 
     - name: Download Allure results
       uses: actions/download-artifact@v4
       with:
+        # Download all previously uploaded allure results artifacts
         path: artifacts
 
     - name: Merge Allure results
@@ -67,35 +80,42 @@ jobs:
         find artifacts/ -type f \( -name "*.json" -o -name "*.attach" -o -name "*.png" \) -exec cp {} merged-results/ \;
 
     - name: Install Allure
-      run: npm install -g allure-commandline
+      run: npm install -g allure-commandline  # Install Allure CLI globally using npm
 
     - name: Generate Allure Report
       run: |
+        # Generate the Allure HTML report from merged test results, clean previous reports
         allure generate merged-results -o allure-report --clean
 
     - name: Upload Allure Report artifact
       uses: actions/upload-artifact@v4
       with:
+        # Upload the generated Allure report as an artifact for later download or deployment
         name: allure-report
         path: allure-report
 
   deploy-report:
-    needs: merge-and-generate-report
+    needs: merge-and-generate-report  # Run after report generation job
     if: always()
     runs-on: ubuntu-latest
+
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4  # Checkout code again (required for the pages deployment action)
 
     - name: Download Allure Report artifact
       uses: actions/download-artifact@v4
       with:
+        # Download the generated Allure report artifact
         name: allure-report
         path: allure-report
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v4
       with:
+        # Use GitHub token for authentication
         github_token: ${{ secrets.GITHUB_TOKEN }}
+        # Directory to publish (the Allure HTML report)
         publish_dir: allure-report
+        # Target branch to publish pages (gh-pages)
         publish_branch: gh-pages
