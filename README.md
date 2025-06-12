@@ -119,11 +119,12 @@ allure serve allure_results/
 
 The pipeline is located at `.github/workflows/test_pipeline.yml`. It runs tests on Chromium, Firefox, and WebKit simultaneously. After the tests finish (regardless of pass or fail), it generates the Allure report and deploys it to a GitHub Pages site (`pages-build-deployment`).
 
-Here you can view the full report with screenshots of failures and summary of passed/failed tests.
 
 ### Important Note on Pipeline Failures
 
 During pipeline runs on GitHub Actions, all tests failed due to the bank’s security systems triggering CAPTCHA challenges. This happened because the website detected access from a foreign IP/location and blocked automated access.
+
+![VIDEO](https://github.com/user-attachments/assets/d3744d80-0bef-42b4-aed9-70c8c198774e)
 
 
 ---
