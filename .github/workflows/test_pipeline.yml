@@ -1,5 +1,4 @@
 name: Run Playwright Tests and Generate Allure Report
-
 on:
   workflow_dispatch:
 
@@ -23,7 +22,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxrandr2 libxdamage1 libxkbcommon0 libgtk-3-0 libasound2
+        sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxrandr2 libxdamage1 libxkbcommon0 libgtk-3-0 libasound2t64
         python -m venv venv
         source venv/bin/activate
         pip install -r requirements.txt
@@ -73,7 +72,7 @@ jobs:
       run: |
         echo "Files in merged_results directory:"
         ls -l merged_results
-        file_count=$(ls -1q merged_results/*.json | wc -l)
+        file_count=$(ls -1q merged_results/*.json 2>/dev/null | wc -l)
         if [ "$file_count" -eq 0 ]; then
           echo "::error::No JSON result files found in merged_results!"
           exit 1
