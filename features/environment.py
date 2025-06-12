@@ -9,9 +9,7 @@ from class_objects.cookie_manager import CookieManager
 def before_feature(context : CustomContext, feature):
     context.playwright = sync_playwright().start()
     browser_launcher = getattr(context.playwright, BROWSER)
-    context.browser = browser_launcher.launch(headless=True, slow_mo=500) 
-    # I used browser slow_mo here so we could see what was happening on the UI. 
-    # In normal tests I would remove this to increase test performance
+    context.browser = browser_launcher.launch(headless= False)
     context.page = context.browser.new_page()
     context.page.goto(BASE_URL)
     context.cookie_manager = CookieManager(context.page)
