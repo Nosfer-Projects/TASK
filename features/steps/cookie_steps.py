@@ -17,9 +17,9 @@ def step_confirm_cookie_selection(context):
     context.cookie_manager.confirm_cookie_selection()
 
 @then("Cookie consent modal should disappear")
-def step_verify_analytical_cookies(context):
+def step_modal_disappeared(context):
     context.cookie_manager.verify_cookie_dialog_closed()
 
 @then("Analytical cookies should be stored in the browser")
-def step_verify_analytical_cookies(context):
+def step_check_analytics_cookies(context):
     context.cookie_manager.verify_stored_cookies()
