@@ -57,13 +57,21 @@ jobs:
 
     - name: Merge Allure Results
       run: |
-        mkdir merged_results
-        find artifacts -type d -name "allure_results_*" -exec cp -r {}/* merged_results/ \;
+        mkdir -p merged_results
+        for dir in artifacts/allure_results_*; do
+          cp -r "$dir"/* merged_results/
+        done
+
+    - name: Debug merged results
+      run: ls -l merged_results
 
     - name: Generate Allure Report
       run: |
         npm install -g allure-commandline
         allure generate merged_results -o allure-report --clean
+
+    - name: Debug Allure Report files
+      run: ls -lR allure-report
 
     - name: Upload Allure Report
       uses: actions/upload-artifact@v4
