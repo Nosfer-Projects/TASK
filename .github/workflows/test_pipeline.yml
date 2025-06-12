@@ -57,20 +57,15 @@ jobs:
         path: artifacts
 
     - name: Verify downloaded artifacts
-      run: |
-        echo "Listing structure of downloaded artifacts:"
-        ls -lR artifacts
+      run: ls -lR artifacts
 
     - name: Merge Allure Results
       run: |
         mkdir -p merged_results
-        echo "Merging result files from all artifacts..."
         find artifacts/ -type f \( -name "*.json" -o -name "*.attach" \) -exec cp {} merged_results/ \;
-        echo "Merging complete."
 
     - name: Debug merged results
       run: |
-        echo "Files in merged_results directory:"
         ls -l merged_results
         file_count=$(ls -1q merged_results/*.json 2>/dev/null | wc -l)
         if [ "$file_count" -eq 0 ]; then
@@ -84,13 +79,39 @@ jobs:
         npm install -g allure-commandline
         allure generate merged_results -o allure-report --clean
 
-    - name: Debug Allure Report files
-      run: |
-        echo "Allure report folder content:"
-        ls -lR allure-report
-
-    - name: Upload Allure Report
+    - name: Upload Allure Report artifact
       uses: actions/upload-artifact@v4
       with:
         name: allure-report
         path: allure-report
+
+  deploy-report:
+    needs: merge-and-generate-report
+    runs-on: ubuntu-latest
+    
+    permissions:
+      pages: write
+      id-token: write
+      
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Download Allure report artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact for GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'allure-report'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
