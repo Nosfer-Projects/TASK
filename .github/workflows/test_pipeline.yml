@@ -55,24 +55,27 @@ jobs:
       with:
         path: artifacts
 
-    - name: Merge Allure Results
+    - name: Merge Allure Results (copy whole folders)
       run: |
         mkdir -p merged_results
-        find artifacts/allure_results_* -type f -name "*.json" -exec cp {} merged_results/ \;
+        for dir in artifacts/allure_results_*; do
+          echo "Copying contents of $dir"
+          cp -r "$dir"/* merged_results/
+        done
 
-    - name: Debug merged results
+    - name: List merged results files
       run: |
-        echo "Files in merged_results:"
-        ls -l merged_results
+        echo "Contents of merged_results:"
+        ls -lR merged_results
 
     - name: Generate Allure Report
       run: |
         npm install -g allure-commandline
         allure generate merged_results -o allure-report --clean
 
-    - name: Debug Allure Report files
+    - name: List Allure Report files
       run: |
-        echo "Allure report folder content:"
+        echo "Contents of allure-report:"
         ls -lR allure-report
 
     - name: Upload Allure Report
