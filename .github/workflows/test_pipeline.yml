@@ -64,8 +64,7 @@ jobs:
     - name: Merge Allure results
       run: |
         mkdir -p merged-results
-        find artifacts/ -type f -name "*.json" -exec cp {} merged-results/ \;
-        find artifacts/ -type f -name "*.attach" -exec cp {} merged-results/ \;
+        find artifacts/ -type f \( -name "*.json" -o -name "*.attach" -o -name "*.png" \) -exec cp {} merged-results/ \;
 
     - name: Install Allure
       run: npm install -g allure-commandline
