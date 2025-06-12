@@ -41,6 +41,7 @@ jobs:
         BROWSER=${{ matrix.browser }} behave -f allure_behave.formatter:AllureFormatter -o allure-results
 
     - name: Upload Allure Results for ${{ matrix.browser }}
+      if: always()
       uses: actions/upload-artifact@v4
       with:
         name: allure-results-${{ matrix.browser }}
