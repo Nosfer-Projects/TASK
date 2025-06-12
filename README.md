@@ -139,6 +139,7 @@ During pipeline runs on GitHub Actions, all tests failed due to the bank’s sec
 ## 🛠 Troubleshooting
 
 - If the cookie modal does not appear, try clearing browser cookies or run tests in a fresh browser context
+- To see the browser UI during tests, set headless=False and optionally set slow_mo=500 (in milliseconds) in environment.py. This slows down the execution and makes interactions easier to observe.
 - To run tests in headless mode, set headless=True in environment.py when launching the browser — although this is optional, since headless is set to True by default in Playwright. So you can either add it explicitly or omit it entirely.
 - By default, tests run on the **Chromium** browser.
 - To run tests on a different browser, set the `BROWSER` environment variable to `"firefox"` or `"webkit"` before running the tests.
