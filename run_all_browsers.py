@@ -1,8 +1,11 @@
 import subprocess
 import os
 
-browsers = ['chromium', 'firefox', 'webkit']
+# This script is used to run tests locally in parallel on three different browsers: Chromium, Firefox, and WebKit.
+# For each browser, the BROWSER environment variable is set, and tests are executed using 'behave'.
+# Each test run is started as a separate process, and the script waits for all of them to complete.
 
+browsers = ['chromium', 'firefox', 'webkit']
 processes = []
 
 for browser in browsers:

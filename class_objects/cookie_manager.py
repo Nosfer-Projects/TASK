@@ -3,7 +3,16 @@ from config_files.cookie_constants import *
 from config_files.config import *
 
 class CookieManager:
+    """
+    Manages interactions with the cookie consent dialog on the ING homepage.
+    This class provides methods to verify the homepage, interact with the cookie 
+    settings modal, and assert correct cookie behavior in the browser storage.
+    """
     def __init__(self, page: Page):
+        """
+        Initializes the CookieManager with locators for all key elements
+        in both the main cookie dialog and the customization window.
+        """
         self.page = page
         self.cookie_window =                       self.page.locator("div.js-cookie-policy-main div[role='dialog']")
         self.title_window_locator =                self.cookie_window.locator("h2.cookie-policy-title", has_text=TITLE_TEXT)
@@ -44,20 +53,36 @@ class CookieManager:
         ]
 
     def expect_visible_with_text(self, selectors_list : list):
+        """
+        Asserts that all elements in the provided list of locators are visible on the page.
+        Useful for checking presence of labels, buttons, or links.
+        """
         for selector in selectors_list:
             expect(selector).to_be_visible()
 
     def verify_ing_homepage(self):
+        """
+        Verifies that the ING homepage has loaded successfully by checking
+        the page title and URL.
+        """
         self.page.wait_for_load_state("domcontentloaded")
         expect(self.page).to_have_title(URL_TITLE)
         expect(self.page).to_have_url(BASE_URL)
 
     def validate_cookie_settings_window(self):
+        """
+        Checks if the cookie consent dialog is visible and all required
+        elements (title, buttons, links, description) are present.
+        """
         expect(self.cookie_window).to_be_visible()
         expect(self.cookie_window).to_be_enabled()
         self.expect_visible_with_text(self.cookie_window_selectors_list)
 
     def enable_analytical_cookies(self):
+        """
+        Opens the "Customize" cookie settings window and enables analytical cookies
+        (technical cookies remain enabled by default, marketing cookies stay disabled).
+        """
         self.customize_button_locator.click()
         self.expect_visible_with_text(self.cookie_customize_window_selectors_list)
         self.customize_analytical_switch_button.click()
@@ -66,13 +91,28 @@ class CookieManager:
         expect(self.customize_marketing_switch_button).not_to_be_checked()
 
     def confirm_cookie_selection(self):
+        """
+        Confirms the selected cookie preferences by clicking "Accept selected".
+        """
         self.customize_accept_selected_button.click()
 
     def verify_cookie_dialog_closed(self):
+        """
+        Verifies that both the main cookie window and customization window
+        are no longer visible, indicating that the selection was accepted.
+        """
         expect(self.cookie_window).not_to_be_visible()
         expect(self.customize_cookie_window_locator).not_to_be_visible()
     
     def verify_stored_cookies(self):
+        """
+        Retrieves cookies from the browser context and asserts that:
+        - Required policy cookies are stored after enabling technical and analytical cookies.
+        - 'cookiePolicyGDPR' has the value '3', indicating that analytical cookies are accepted.
+        - 'cookiePolicyINCPS' is present with value 'true', which does not appear when no cookies are accepted.
+        - 'cookiePolicyGDPR__details' is present, providing detailed consent metadata.
+        - Marketing cookies like '_fbp' are not present.
+        """
         cookies = self.page.context.cookies(BASE_URL)
         cookies_dict = {cookie['name']: cookie['value'] for cookie in cookies}
         assert 'cookiePolicyGDPR' in cookies_dict, "Missing cookiePolicyGDPR"
