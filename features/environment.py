@@ -21,9 +21,6 @@ def after_feature(context: CustomContext, feature):
     context.browser.close()
     context.playwright.stop()
 
-def before_scenario(context: CustomContext, scenario):
-    scenario.name += f" [{BROWSER}]"
-
 def after_step(context: CustomContext, step):
     if step.status == "failed":
         screenshot = context.page.screenshot()
