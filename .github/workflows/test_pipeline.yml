@@ -48,6 +48,7 @@ jobs:
 
   merge-and-generate-report:
     needs: run-tests
+    if: always()
     runs-on: ubuntu-latest
 
     steps:
@@ -80,6 +81,7 @@ jobs:
 
   deploy-report:
     needs: merge-and-generate-report
+    if: always()
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
