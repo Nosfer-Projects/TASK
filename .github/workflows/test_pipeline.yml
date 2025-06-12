@@ -1,4 +1,5 @@
 name: Run Playwright Tests and Generate Allure Report
+
 on:
   workflow_dispatch:
 
@@ -62,7 +63,10 @@ jobs:
     - name: Merge Allure Results
       run: |
         mkdir -p merged_results
-        find artifacts/ -type f \( -name "*.json" -o -name "*.attach" \) -exec cp {} merged_results/ \;
+        for dir in artifacts/*; do
+          echo "Merging from $dir"
+          cp -r "$dir"/* merged_results/
+        done
 
     - name: Debug merged results
       run: |
@@ -88,30 +92,32 @@ jobs:
   deploy-report:
     needs: merge-and-generate-report
     runs-on: ubuntu-latest
-    
+
+    if: github.ref == 'refs/heads/main'  # tylko main może publikować do Pages
+
     permissions:
       pages: write
       id-token: write
-      
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Download Allure report artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-report
-          path: allure-report/
+    - name: Download Allure report artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: allure-report
+        path: allure-report/
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
+    - name: Setup Pages
+      uses: actions/configure-pages@v5
 
-      - name: Upload artifact for GitHub Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: 'allure-report'
+    - name: Upload artifact for GitHub Pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: 'allure-report'
 
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
