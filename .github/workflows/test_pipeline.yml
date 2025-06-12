@@ -1,4 +1,4 @@
-name: Run Playwright Tests on 3 Browsers
+name: Run Playwright Tests and Generate Allure Report
 
 on:
   workflow_dispatch:
@@ -6,14 +6,14 @@ on:
 jobs:
   run-tests:
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         browser: [chromium, firefox, webkit]
       fail-fast: false
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v4
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -23,7 +23,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxrandr2 libxdamage1 libxkbcommon0 libgtk-3-0 libasound2t64
+        sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxrandr2 libxdamage1 libxkbcommon0 libgtk-3-0 libasound2
         python -m venv venv
         source venv/bin/activate
         pip install -r requirements.txt
@@ -35,47 +35,59 @@ jobs:
         mkdir -p allure_results_${{ matrix.browser }}
         BROWSER=${{ matrix.browser }} behave -f allure_behave.formatter:AllureFormatter -o allure_results_${{ matrix.browser }}
 
-    - name: Upload Allure Results
+    - name: Upload Allure Results for ${{ matrix.browser }}
       uses: actions/upload-artifact@v4
       with:
         name: allure_results_${{ matrix.browser }}
         path: allure_results_${{ matrix.browser }}
 
-  merge-reports:
+  merge-and-generate-report:
     needs: run-tests
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/setup-java@v3
+    - name: Set up Java
+      uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
 
-    - uses: actions/download-artifact@v4
+    - name: Download all Allure results artifacts
+      uses: actions/download-artifact@v4
       with:
         path: artifacts
 
-    - name: Merge Allure Results (copy whole folders)
+    - name: Verify downloaded artifacts
+      run: |
+        echo "Listing structure of downloaded artifacts:"
+        ls -lR artifacts
+
+    - name: Merge Allure Results
       run: |
         mkdir -p merged_results
-        for dir in artifacts/allure_results_*; do
-          echo "Copying contents of $dir"
-          cp -r "$dir"/* merged_results/
-        done
+        echo "Merging result files from all artifacts..."
+        find artifacts/ -type f \( -name "*.json" -o -name "*.attach" \) -exec cp {} merged_results/ \;
+        echo "Merging complete."
 
-    - name: List merged results files
+    - name: Debug merged results
       run: |
-        echo "Contents of merged_results:"
-        ls -lR merged_results
+        echo "Files in merged_results directory:"
+        ls -l merged_results
+        file_count=$(ls -1q merged_results/*.json | wc -l)
+        if [ "$file_count" -eq 0 ]; then
+          echo "::error::No JSON result files found in merged_results!"
+          exit 1
+        fi
+        echo "Found $file_count JSON files to process."
 
     - name: Generate Allure Report
       run: |
         npm install -g allure-commandline
         allure generate merged_results -o allure-report --clean
 
-    - name: List Allure Report files
+    - name: Debug Allure Report files
       run: |
-        echo "Contents of allure-report:"
+        echo "Allure report folder content:"
         ls -lR allure-report
 
     - name: Upload Allure Report
