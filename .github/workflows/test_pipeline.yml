@@ -1,4 +1,4 @@
-name: Run Playwright Tests and Generate Allure Report
+name: Run Playwright Tests and Publish Allure Report
 
 on:
   workflow_dispatch:
@@ -17,75 +17,83 @@ jobs:
       fail-fast: false
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxrandr2 libxdamage1 libxkbcommon0 libgtk-3-0 libasound2t64
-          python -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt
-          python -m playwright install --with-deps
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxrandr2 libxdamage1 libxkbcommon0 libgtk-3-0 libasound2t64
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+        python -m playwright install --with-deps
 
-      - name: Run tests on ${{ matrix.browser }}
-        run: |
-          source venv/bin/activate
-          mkdir -p allure-results
-          BROWSER=${{ matrix.browser }} behave -f allure_behave.formatter:AllureFormatter -o allure-results
+    - name: Run tests on ${{ matrix.browser }}
+      run: |
+        source venv/bin/activate
+        mkdir -p allure-results
+        BROWSER=${{ matrix.browser }} behave -f allure_behave.formatter:AllureFormatter -o allure-results
 
-      - name: Upload Allure Results for ${{ matrix.browser }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-results-${{ matrix.browser }}
-          path: allure-results
+    - name: Upload Allure Results for ${{ matrix.browser }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: allure-results-${{ matrix.browser }}
+        path: allure-results
 
   merge-and-generate-report:
     needs: run-tests
-    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Download Allure Results
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
+    - name: Download Allure results
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
 
-      - name: Merge and Publish Allure Report
-        uses: Valiantsin2021/allure-shard-results-publish@1.0.6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          add-env: 'true'
+    - name: Merge Allure results
+      run: |
+        mkdir -p merged-results
+        find artifacts/ -type f -name "*.json" -exec cp {} merged-results/ \;
+        find artifacts/ -type f -name "*.attach" -exec cp {} merged-results/ \;
+
+    - name: Install Allure
+      run: npm install -g allure-commandline
+
+    - name: Generate Allure Report
+      run: |
+        allure generate merged-results -o allure-report --clean
+
+    - name: Upload Allure Report artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: allure-report
+        path: allure-report
 
   deploy-report:
     needs: merge-and-generate-report
-    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
-
     steps:
-      - name: Download Allure report artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-report
-          path: allure-report/
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
+    - name: Download Allure Report artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: allure-report
+        path: allure-report
 
-      - name: Upload artifact for GitHub Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: 'allure-report'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: allure-report
+        publish_branch: gh-pages
