@@ -5,7 +5,7 @@ from config_files.config import *
 class CookieManager:
     """
     Manages interactions with the cookie consent dialog on the ING homepage.
-    This class provides methods to verify the homepage, interact with the cookie 
+    This class provides methods to verify the homepage, interact with the cookie
     settings modal, and assert correct cookie behavior in the browser storage.
     """
     def __init__(self, page: Page):

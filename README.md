@@ -134,8 +134,6 @@ During pipeline runs on GitHub Actions, all tests failed due to the bank’s sec
 
 ![VIDEO](https://github.com/user-attachments/assets/14838d86-23d5-42ba-ab70-8ab689d36ba8)
 
-
-
 ---
 
 ## 🛠 Troubleshooting

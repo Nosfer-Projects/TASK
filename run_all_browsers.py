@@ -15,8 +15,8 @@ for browser in browsers:
     cmd = [
         'behave'
     ]
-    p = subprocess.Popen(cmd, env=env)
-    processes.append(p)
+    process = subprocess.Popen(cmd, env=env)
+    processes.append(process)
 
-for p in processes:
-    p.wait()
+for process in processes:
+    process.wait()
