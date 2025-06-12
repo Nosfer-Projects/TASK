@@ -95,7 +95,7 @@ Follow instructions at [Allure Documentation](https://docs.qameta.io/allure/#_ge
 ### 2. Generate and view the report
 
 ```bash
-behave
+behave -f allure_behave.formatter:AllureFormatter -o allure_results
 allure serve allure_results/
 ```
 
