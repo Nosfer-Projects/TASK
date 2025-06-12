@@ -1,18 +1,18 @@
-name: Run Playwright Tests on 3 Browsers
-
+name: Run Playwright Tests and Generate Allure Report
 on:
   workflow_dispatch:
 
 jobs:
   run-tests:
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         browser: [chromium, firefox, webkit]
+      fail-fast: false
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v4
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -57,47 +57,97 @@ jobs:
 
     - name: Set up Python & install Python dependencies
       run: |
+        sudo apt-get update
+        sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxrandr2 libxdamage1 libxkbcommon0 libgtk-3-0 libasound2t64
         python -m venv venv
         source venv/bin/activate
         pip install -r requirements.txt
-        playwright install
+        python -m playwright install --with-deps
 
     - name: Run tests on ${{ matrix.browser }}
       run: |
         source venv/bin/activate
+        mkdir -p allure_results_${{ matrix.browser }}
         BROWSER=${{ matrix.browser }} behave -f allure_behave.formatter:AllureFormatter -o allure_results_${{ matrix.browser }}
 
-    - name: Upload Allure Results
+    - name: Upload Allure Results for ${{ matrix.browser }}
       uses: actions/upload-artifact@v4
       with:
         name: allure_results_${{ matrix.browser }}
         path: allure_results_${{ matrix.browser }}
 
-  merge-reports:
+  merge-and-generate-report:
     needs: run-tests
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/setup-java@v3
+    - name: Set up Java
+      uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
 
-    - uses: actions/download-artifact@v4
+    - name: Download all Allure results artifacts
+      uses: actions/download-artifact@v4
       with:
         path: artifacts
 
+    - name: Verify downloaded artifacts
+      run: ls -lR artifacts
+
     - name: Merge Allure Results
       run: |
-        mkdir merged_results
-        find artifacts -type d -name "allure_results_*" -exec cp -r {}/* merged_results/ \;
+        mkdir -p merged_results
+        find artifacts/ -type f \( -name "*.json" -o -name "*.attach" \) -exec cp {} merged_results/ \;
+
+    - name: Debug merged results
+      run: |
+        ls -l merged_results
+        file_count=$(ls -1q merged_results/*.json 2>/dev/null | wc -l)
+        if [ "$file_count" -eq 0 ]; then
+          echo "::error::No JSON result files found in merged_results!"
+          exit 1
+        fi
+        echo "Found $file_count JSON files to process."
 
     - name: Generate Allure Report
       run: |
         npm install -g allure-commandline
         allure generate merged_results -o allure-report --clean
 
-    - name: Upload Allure Report
+    - name: Upload Allure Report artifact
       uses: actions/upload-artifact@v4
       with:
         name: allure-report
         path: allure-report
+
+  deploy-report:
+    needs: merge-and-generate-report
+    runs-on: ubuntu-latest
+    
+    permissions:
+      pages: write
+      id-token: write
+      
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Download Allure report artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact for GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'allure-report'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
