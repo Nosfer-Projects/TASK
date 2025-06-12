@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
-      fail-fast: false  # NIE przerywa pozostałych jobów w matrix jeśli jeden padnie
+      fail-fast: false
       matrix:
         browser: [chromium, firefox, webkit]
 
