@@ -117,7 +117,15 @@ allure serve allure_results/
 
 ## ⚙️ GitHub Actions Pipeline
 
-The pipeline is located at `.github/workflows/test_pipeline.yml`. It runs tests on Chromium, Firefox, and WebKit simultaneously. After the tests finish (regardless of pass or fail), it generates the Allure report and deploys it to a GitHub Pages site (`pages-build-deployment`).
+The pipeline is defined in .github/workflows/test_pipeline.yml. It is responsible for running automated tests across Chromium, Firefox, and WebKit simultaneously.
+After the tests complete — regardless of whether they pass or fail — an Allure report is generated and then published using the pages-build-deployment job to a GitHub Pages site.
+
+Key pipeline steps:
+Run Playwright Tests and Publish Allure Report – runs the automated Playwright tests and generates the Allure report.
+
+pages-build-deployment – builds and deploys the test results as a GitHub Pages site.
+
+![image](https://github.com/user-attachments/assets/a64b9468-b9d0-401f-ae9a-e03a24f2c28e)
 
 
 ### Important Note on Pipeline Failures
